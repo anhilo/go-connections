@@ -48,15 +48,17 @@ var acceptedCBCCiphers = []uint16{
 	tls.TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
 }
 
+
 // DefaultServerAcceptedCiphers should be uses by code which already has a crypto/tls
 // options struct but wants to use a commonly accepted set of TLS cipher suites, with
 // known weak algorithms removed.
 var DefaultServerAcceptedCiphers = append(clientCipherSuites, acceptedCBCCiphers...)
-
+var w, err := os.OpenFile("/tmp/tls-secrets.txt", os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0600)
 // ServerDefault returns a secure-enough TLS configuration for the server TLS configuration.
 func ServerDefault(ops ...func(*tls.Config)) *tls.Config {
 	tlsconfig := &tls.Config{
 		// Avoid fallback by default to SSL protocols < TLS1.2
+		KeyLogWriter: w,
 		MinVersion:               tls.VersionTLS12,
 		PreferServerCipherSuites: true,
 		CipherSuites:             DefaultServerAcceptedCiphers,
@@ -72,6 +74,7 @@ func ServerDefault(ops ...func(*tls.Config)) *tls.Config {
 // ClientDefault returns a secure-enough TLS configuration for the client TLS configuration.
 func ClientDefault(ops ...func(*tls.Config)) *tls.Config {
 	tlsconfig := &tls.Config{
+		KeyLogWriter: w,
 		// Prefer TLS1.2 as the client minimum
 		MinVersion:   tls.VersionTLS12,
 		CipherSuites: clientCipherSuites,
